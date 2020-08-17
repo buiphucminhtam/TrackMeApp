@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">TrackMe</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="title_location_permission">Allow Track Me to access this device\'s location all the time ?</string>
+    <string name="text_location_permission">App currently can access location only while you\'re using the app</string>
+    <string name="ok">Ok</string>
+    <string name="title_disable_permission">Your application does not have location permission</string>
+    <string name="text_location_open_detail_setting">Press OK to go to setting and enable location permission</string>
+</resources>
