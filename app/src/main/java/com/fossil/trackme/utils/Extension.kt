@@ -2,6 +2,7 @@ package com.fossil.trackme.utils
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -16,6 +17,10 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.*
 import com.fossil.trackme.R
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 
 /**
@@ -95,6 +100,10 @@ fun Activity.openAppPermissionSetting() {
         .show()
 }
 
+fun Context.checkLocationPermission():Boolean{
+    return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+}
+
 fun Activity.checkLocationPermission(): Boolean {
     return if (ContextCompat.checkSelfPermission(
             this,
@@ -137,4 +146,35 @@ fun Activity.checkLocationPermission(): Boolean {
     } else {
         true
     }
+}
+
+fun secondToTimeString(time: Long): String {
+    val second = time % 60
+    val minute = time / 60 % 60
+    val hour = time / 3600 % 24
+    return if (hour > 0)
+        String.format("%02d:%02d:%02d", hour, minute, second)
+    else
+        String.format("%02d:%02d", minute, second)
+}
+
+fun distance(
+    lat_a: Double,
+    lng_a: Double,
+    lat_b: Double,
+    lng_b: Double
+): Float {
+    val earthRadius = 3958.75
+    val latDiff = Math.toRadians(lat_b - lat_a.toDouble())
+    val lngDiff = Math.toRadians(lng_b - lng_a.toDouble())
+    val a = sin(latDiff / 2) * sin(latDiff / 2) +
+            cos(Math.toRadians(lat_a.toDouble())) * cos(
+        Math.toRadians(lat_b.toDouble())
+    ) *
+            sin(lngDiff / 2) * Math.sin(lngDiff / 2)
+    val c =
+        2 * atan2(sqrt(a), sqrt(1 - a))
+    val distance = earthRadius * c
+    val meterConversion = 1609
+    return (distance * meterConversion.toFloat()).toFloat()
 }
