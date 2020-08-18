@@ -6,6 +6,8 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.net.Uri
 import android.provider.Settings
 import android.view.View
@@ -100,11 +102,15 @@ fun Activity.openAppPermissionSetting() {
         .show()
 }
 
-fun Context.checkLocationPermission():Boolean{
-    return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+fun Context.checkLocationPermission(): Boolean {
+    return ContextCompat.checkSelfPermission(
+        this,
+        Manifest.permission.ACCESS_FINE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
 }
 
-fun Activity.checkLocationPermission(): Boolean {
+
+fun Activity.checkLocationPermissionWithRequest(): Boolean {
     return if (ContextCompat.checkSelfPermission(
             this,
             Manifest.permission.ACCESS_FINE_LOCATION
@@ -122,6 +128,7 @@ fun Activity.checkLocationPermission(): Boolean {
             // Show an explanation to the user *asynchronously* -- don't block
             // this thread waiting for the user's response! After the user
             // sees the explanation, try again to request the permission.
+
             AlertDialog.Builder(this)
                 .setTitle(R.string.title_location_permission)
                 .setMessage(R.string.text_location_permission)
@@ -177,4 +184,16 @@ fun distance(
     val distance = earthRadius * c
     val meterConversion = 1609
     return (distance * meterConversion.toFloat()).toFloat()
+}
+
+fun View.loadBitmapFromView(): Bitmap? {
+    val b = Bitmap.createBitmap(
+        layoutParams.width,
+        layoutParams.height,
+        Bitmap.Config.ARGB_8888
+    )
+    val c = Canvas(b)
+    layout(left, top, right, bottom)
+    draw(c)
+    return b
 }

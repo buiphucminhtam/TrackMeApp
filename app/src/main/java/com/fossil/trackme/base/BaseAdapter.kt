@@ -1,8 +1,8 @@
-package com.fossil.trackme.data.base
+package com.fossil.trackme.base
 
 import android.os.Bundle
 import androidx.recyclerview.widget.RecyclerView
-import com.fossil.trackme.data.base.IViewHolder
+import kotlin.reflect.KClass
 
 /**
  * This is a Base recyclerView adapter class that support DataBinding
@@ -18,7 +18,10 @@ import com.fossil.trackme.data.base.IViewHolder
  * @param clickListener handle itemConfigBox callback listener, can be empty
  */
 @Suppress("UNCHECKED_CAST")
-abstract class BaseAdapter<TYPE>() : RecyclerView.Adapter<RecyclerView.ViewHolder>(),
+abstract class BaseAdapter<TYPE>(
+    private var layoutId: Int,
+    private var vhClass: KClass<out BaseViewHolder<TYPE>>,
+    private var clickListener: RVClickListener<TYPE>? = null) : RecyclerView.Adapter<RecyclerView.ViewHolder>(),
     BindableAdapter<TYPE> {
 
     override var listData: ArrayList<TYPE> = ArrayList()

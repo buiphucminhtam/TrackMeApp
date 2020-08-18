@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/ivTrackingSession"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:scaleType="centerInside"
+        app:layout_constraintDimensionRatio="16:9"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvDistanceSession"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp30"
+        android:textSize="@dimen/sp16"
+        app:layout_constraintEnd_toStartOf="@id/tvAvgSpeedSession"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ivTrackingSession"
+        tools:text="1000 km" />
+
+    <TextView
+        android:id="@+id/tvDistanceTitleSession"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/distance"
+        android:textSize="@dimen/sp16"
+        app:layout_constraintEnd_toEndOf="@id/tvDistanceSession"
+        app:layout_constraintStart_toStartOf="@id/tvDistanceSession"
+        app:layout_constraintTop_toBottomOf="@id/tvDistanceSession" />
+
+    <TextView
+        android:id="@+id/tvAvgSpeedSession"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/sp16"
+        app:layout_constraintEnd_toStartOf="@id/tvTimeSession"
+        app:layout_constraintStart_toEndOf="@id/tvDistanceSession"
+        app:layout_constraintTop_toTopOf="@id/tvDistanceSession"
+        tools:text="1000 km/h" />
+
+    <TextView
+        android:id="@+id/tvAvgSpeedTitleSession"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/avg_speed"
+        android:textSize="@dimen/sp16"
+        app:layout_constraintEnd_toEndOf="@id/tvAvgSpeedSession"
+        app:layout_constraintStart_toStartOf="@id/tvAvgSpeedSession"
+        app:layout_constraintTop_toBottomOf="@id/tvAvgSpeedSession" />
+
+    <TextView
+        android:id="@+id/tvTimeSession"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/sp16"
+        app:layout_constraintBottom_toBottomOf="@id/tvDistanceTitleSession"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/tvAvgSpeedSession"
+        app:layout_constraintTop_toTopOf="@id/tvDistanceSession"
+        tools:text="01:00:00" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

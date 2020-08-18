@@ -1,10 +1,9 @@
-package com.fossil.trackme.data.base
+package com.fossil.trackme.base
 
 import android.app.Service
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
-import com.fossil.trackme.data.services.LocationService
 import kotlinx.coroutines.*
 
 abstract class BaseService: Service() {

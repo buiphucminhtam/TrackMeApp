@@ -21,7 +21,5 @@ abstract class MapsDatabase : RoomDatabase() {
 
     abstract fun trackSessionDAO(): TrackSessionDao
 
-    abstract fun trackSessionAndLatLongDAO(): TrackSessionAndLatLongDao
-
     abstract fun latLongDAO():LatLongDAO
 }

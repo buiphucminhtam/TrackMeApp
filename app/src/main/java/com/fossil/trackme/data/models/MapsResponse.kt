@@ -12,7 +12,9 @@ data class LatLong(
     @ColumnInfo(name = "lat")
     var lat: Double? = 0.0,
     @ColumnInfo(name = "long")
-    var long: Double? = 0.0
+    var long: Double? = 0.0,
+    @ColumnInfo(name = "speed")
+    var currentSpeed: Float?=0F
 )
 
 @Entity(tableName = "tracksession")
@@ -27,10 +29,4 @@ data class TrackSession(
     var avgSpeed: Float? = 0F,
     @ColumnInfo(name = "distance")
     var totalDistance: Float? = 0F
-)
-
-data class TrackSessionAndLatLong(
-    @Embedded val trackSession: TrackSession,
-    @Relation(parentColumn = "id", entityColumn = "trackSessionId")
-    val listLatLong: List<LatLong>?
 )

@@ -1,19 +1,14 @@
-package com.fossil.trackme.data.base
+package com.fossil.trackme.base
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.Default
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.cancel
 
 /**
  * A base class of [RecyclerView.ViewHolder], suit for [BaseRVAdapter], can use separate with other Adapter
  * Extended class mustn't add anything to constructor
  */
-abstract class BaseViewHolder<TYPE>(itemView: View) :
+abstract class BaseViewHolder<TYPE>(itemView: View,private var clickListener: RVClickListener<TYPE>?) :
     RecyclerView.ViewHolder(itemView), IViewHolder<TYPE>, LayoutContainer {
 
     public val TAG: String = javaClass.simpleName
@@ -27,6 +22,13 @@ abstract class BaseViewHolder<TYPE>(itemView: View) :
 
     init {
         this.initViews()
+    }
+
+    protected fun itemClick(view: View? = null) {
+        if (view == null)
+            clickListener?.onItemClick(layoutPosition, data)
+        else
+            clickListener?.onSubItemClick(layoutPosition, data, view.id)
     }
 
     /**

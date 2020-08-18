@@ -33,16 +33,17 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
-<!--        <activity-->
-<!--            android:name=".MapsActivity"-->
-<!--            android:label="@string/title_activity_maps"></activity>-->
-        <activity android:name=".MapsActivity">
+        <activity android:name=".ui.activity.SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".ui.activity.HomeActivity"/>
+
+        <activity android:name=".ui.activity.MapsActivity"/>
 
         <service android:name=".data.services.LocationService" android:enabled="true"/>
     </application>

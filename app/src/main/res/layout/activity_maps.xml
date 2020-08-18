@@ -10,17 +10,19 @@
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        app:layout_constraintDimensionRatio="16:9"
         app:layout_constraintBottom_toTopOf="@id/lineMap"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:context=".MapsActivity" />
+        tools:context=".ui.activity.MapsActivity" />
+
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/lineMap"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.7" />
+        app:layout_constraintGuide_percent="0.666" />
 
     <TextView
         android:id="@+id/tvDistance"
@@ -34,6 +36,16 @@
         app:layout_constraintTop_toBottomOf="@id/lineMap" />
 
     <TextView
+        android:id="@+id/tvDistanceTitle"
+        app:layout_constraintTop_toBottomOf="@id/tvDistance"
+        app:layout_constraintStart_toStartOf="@id/tvDistance"
+        app:layout_constraintEnd_toEndOf="@id/tvDistance"
+        android:text="@string/distance"
+        android:textSize="@dimen/sp16"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <TextView
         android:id="@+id/tvAvgSpeed"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -44,14 +56,26 @@
         app:layout_constraintTop_toTopOf="@id/tvDistance" />
 
     <TextView
+        android:id="@+id/tvAvgSpeedTitle"
+        android:text="@string/avg_speed"
+        app:layout_constraintTop_toBottomOf="@id/tvAvgSpeed"
+        app:layout_constraintStart_toStartOf="@id/tvAvgSpeed"
+        app:layout_constraintEnd_toEndOf="@id/tvAvgSpeed"
+        android:textSize="@dimen/sp16"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <TextView
         android:id="@+id/tvTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="@dimen/sp16"
         tools:text="01:00:00"
+        app:layout_constraintBottom_toBottomOf="@id/tvDistanceTitle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/tvAvgSpeed"
         app:layout_constraintTop_toTopOf="@id/tvDistance" />
+
 
     <Button
         android:id="@+id/btnResume"

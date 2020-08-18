@@ -3,12 +3,14 @@ package com.fossil.trackme.data.database
 import androidx.room.*
 import com.fossil.trackme.data.models.LatLong
 import com.fossil.trackme.data.models.TrackSession
-import com.fossil.trackme.data.models.TrackSessionAndLatLong
 
 @Dao
 interface TrackSessionDao {
     @Query("Select * from TrackSession")
     suspend fun getListTrackSession(): List<TrackSession>
+
+    @Query("Select * from tracksession WHERE id = :id")
+    suspend fun getTrackSessionById(id: Long) : TrackSession
 
     @Insert
     suspend fun insertTrackSession(trackSession: TrackSession)
@@ -33,11 +35,4 @@ interface LatLongDAO{
 
     @Delete
     suspend fun deleteLatLong(latLong: LatLong)
-}
-
-@Dao
-interface TrackSessionAndLatLongDao {
-    @Transaction
-    @Query("SELECT * from TrackSession WHERE id = :id order by id ASC")
-    suspend fun getListTrackSessionAndLatLong(id: Long): List<TrackSessionAndLatLong>
 }

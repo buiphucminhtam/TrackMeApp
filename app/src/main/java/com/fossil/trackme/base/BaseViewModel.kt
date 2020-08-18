@@ -1,4 +1,4 @@
-package com.fossil.trackme.data.base
+package com.fossil.trackme.base
 
 import androidx.lifecycle.ViewModel
 import com.fossil.trackme.utils.SingleLiveEvent
