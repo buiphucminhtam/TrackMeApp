@@ -12,32 +12,49 @@ import android.os.*
 import android.util.Log
 import android.widget.RemoteViews
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.fossil.trackme.MapsActivity
 import com.fossil.trackme.R
+import com.fossil.trackme.data.base.BaseService
+import com.fossil.trackme.data.models.TrackSession
+import com.fossil.trackme.data.models.toListLatLong
+import com.fossil.trackme.data.repositories.MapsRepository
 import com.fossil.trackme.utils.checkLocationPermission
-import java.util.*
+import com.fossil.trackme.utils.distance
+import kotlinx.android.synthetic.main.activity_maps.*
+import kotlinx.coroutines.*
+import java.lang.Runnable
 
-class LocationService : Service(), LocationListener {
-    private val binder = LocalBinder()
+class LocationService : BaseService(), LocationListener {
+    private val repo by lazy { MapsRepository.INSTANCE }
+
     private lateinit var locationManager: LocationManager
+    private val listLocation = arrayListOf<Location>()
     private var lastLocation: Location? = null
     private var timeString = ""
     private var isStart = false
     private var isInit = false
+    private var totalDistance = 0f //Meter
     private var totalTime = 0L //second
+    private var sessionId = 0L
     private val handler = Handler()
     private var runnableUpdateTime: Runnable?=null
+    private var notificationLayout:RemoteViews?=null
+
 
     companion object {
+        const val TAG = "LocationService"
         const val ACTION_START = "START"
         const val ACTION_PAUSE = "PAUSE"
         const val LOCATION_DATA = "DATA"
         const val TIME_DATA = "TIME"
+        const val DISTANCE_DATA = "DISTANCE"
         const val ACTION_SENDDATA = "SEND_DATA"
         const val ACTION_UPDATE_TIME = "TIME"
+        const val MAX_TRACKING_LATLONG = 100
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.e("LocationService", "onStartService")
+        Log.e(TAG, "onStartService")
         intent?.let {
             when (it.action) {
                 ACTION_START -> {
@@ -49,6 +66,7 @@ class LocationService : Service(), LocationListener {
                             getSystemService(Context.LOCATION_SERVICE) as LocationManager
                         requestUpdateLocation()
                         createNotification()
+                        insertTrackSession()
                     }
                     //Start timer
                     startTimer()
@@ -85,7 +103,7 @@ class LocationService : Service(), LocationListener {
 
     private fun requestUpdateLocation() {
         if (applicationContext.checkLocationPermission()) {
-            Log.e("LocationService", "request update location")
+            Log.e(TAG, "request update location")
             locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
                 1000,
@@ -97,14 +115,8 @@ class LocationService : Service(), LocationListener {
         }
     }
 
-    override fun onBind(p0: Intent?): IBinder? {
-        return binder
-    }
 
-    inner class LocalBinder : Binder() {
-        // Return this instance of LocalService so clients can call public methods
-        fun getService(): LocationService = this@LocationService
-    }
+
 
     private fun createNotification() {
 // Create intent that will bring our app to the front, as if it was tapped in the app
@@ -135,9 +147,9 @@ class LocationService : Service(), LocationListener {
 
         var notification: Notification? = null
         notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationLayout =
+            notificationLayout =
                 RemoteViews(packageName, R.layout.notification_running)
-            notificationLayout.setOnClickPendingIntent(R.id.tvPause, contentIntent)
+            notificationLayout?.setOnClickPendingIntent(R.id.tvPause, contentIntent)
             Notification.Builder(applicationContext, channel)
                 .setContentTitle(getString(R.string.app_name))
                 .setContentText("Time: ")
@@ -186,31 +198,73 @@ class LocationService : Service(), LocationListener {
     }
 
     override fun onLocationChanged(location: Location?) {
-        Log.e("LocationService", "OnLocationChange")
+        Log.e(TAG, "OnLocationChange")
         //On Update location
-        lastLocation = location ?: lastLocation
+        location?.let {updateDistance(it)}
         saveAndSendBroadCastLocation()
+    }
+
+    private fun updateDistance(newLocation: Location) {
+        lastLocation?.let {
+            val distance = distance(it.latitude,it.longitude,newLocation.latitude,newLocation.longitude)
+            totalDistance += distance
+            lastLocation = newLocation
+        }?:kotlin.run {
+            lastLocation = newLocation
+        }
     }
 
     private fun saveAndSendBroadCastLocation() {
         //Save location and send broad cast to activity
-        if (isStart)
-            LocalBroadcastManager.getInstance(this).sendBroadcast(Intent().apply {
-                action = ACTION_SENDDATA
-                putExtra(LOCATION_DATA, lastLocation)
-            })
+        if (isStart) {
+            lastLocation?.let {
+                listLocation.add(it)
+                LocalBroadcastManager.getInstance(this).sendBroadcast(Intent().apply {
+                    action = ACTION_SENDDATA
+                    putExtra(LOCATION_DATA, it)
+                    putExtra(DISTANCE_DATA, totalDistance)
+                })
+            }
+            if (listLocation.size == MAX_TRACKING_LATLONG) {
+                //Create thread to insert list latlong to db
+                insertListLatLong()
+            }
+        }
+    }
+
+    fun insertTrackSession() {
+        sessionId = System.currentTimeMillis()
+        async {
+            val result = repo.insertTrackSession(TrackSession(sessionId,"",totalTime,0f,totalDistance))
+            Log.e(TAG,"result insert track session: $result")
+            val getListTrackSession = repo.getListTrackSession()
+            Log.e(TAG,"get list tracksession: $getListTrackSession")
+        }
+
+    }
+
+    fun insertListLatLong() {
+        async {
+            val result = repo.insertArrLatLong(listLocation.toListLatLong(sessionId).toTypedArray())
+            Log.e(TAG,"result insert List LatLong: $result")
+
+            val getListTrackSession = repo.getTrackSessionDB(sessionId)
+            Log.e(TAG,"get list latlong: $getListTrackSession")
+
+            listLocation.clear()
+        }
     }
 
     override fun onStatusChanged(p0: String?, p1: Int, p2: Bundle?) {
-        Log.e("LocationService", "onStatusChanged status: $p0")
+        Log.e(TAG, "onStatusChanged status: $p0")
     }
 
     override fun onProviderEnabled(p0: String?) {
-        Log.e("LocationService", "onProviderEnabled: $p0")
+        Log.e(TAG, "onProviderEnabled: $p0")
     }
 
     override fun onProviderDisabled(p0: String?) {
-        Log.e("LocationService", "onProviderDisabled: $p0")
+        Log.e(TAG, "onProviderDisabled: $p0")
     }
 
     override fun onDestroy() {

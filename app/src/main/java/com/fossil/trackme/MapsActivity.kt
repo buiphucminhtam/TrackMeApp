@@ -36,15 +36,18 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var isStartFollow = true //Check is start or pause to move camera
     private var totalTime = 0L //Second
     private var totalDistance = 0f //Meter
+    private var listLocationToDrawPath = arrayListOf<Location>()
     private val broadCastUpdateLocation = object : BroadcastReceiver() {
         override fun onReceive(p0: Context?, p1: Intent?) {
             //receive intent from service
             Log.e(TAG,"receive data action")
             p1?.let {
                 val newLocation: Location? = it.getParcelableExtra(LocationService.LOCATION_DATA)
+                totalDistance = it.getFloatExtra(LocationService.DISTANCE_DATA,0f)
                 if (newLocation != null) {
-                    onLocationChanged(newLocation)
-                    updateDistance(newLocation)
+                    listLocationToDrawPath.add(newLocation)
+                    onLocationChanged()
+                    updateDistance()
                     updateSpeed()
                 }
 
@@ -162,12 +165,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    fun onLocationChanged(newLocation: Location) {
+    fun onLocationChanged() {
         Log.e("MapsActivity", "OnLocationChange: ${lastLocation}")
         //On Update location
         if (isStartFollow) {
             //Follow me when enable follow
             lastLocation?.let {
+                val newLocation = listLocationToDrawPath[0]
                 val currentLatLong = LatLng(it.latitude, it.longitude)
                 val newLatLong = LatLng(newLocation.latitude,newLocation.longitude)
                 mMap?.run {
@@ -177,23 +181,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     //Draw line on map
                     addPolyline(PolylineOptions().add(currentLatLong,newLatLong).width(5f).color(Color.RED))
                 }
+                lastLocation = newLocation
+                listLocationToDrawPath.removeAt(0)
+            }?:kotlin.run {
+                if(listLocationToDrawPath.isNotEmpty())
+                    lastLocation = listLocationToDrawPath[0]
+                listLocationToDrawPath.removeAt(0)
             }
         }
     }
 
-    private fun updateDistance(newLocation: Location) {
-        lastLocation?.let {
-            val distance = distance(it.latitude,it.longitude,newLocation.latitude,newLocation.longitude)
-            Log.e(TAG, "distance update: $distance")
-            totalDistance += distance
-
-            //Udate view
-            tvDistance.text = "${String.format("%.2f", (totalDistance/1000))} Km"
-            //update last location
-            lastLocation = newLocation
-        }?:kotlin.run {
-            lastLocation = newLocation
-        }
+    private fun updateDistance() {
+        //Udate view
+        tvDistance.text = "${String.format("%.2f", (totalDistance/1000))} Km"
     }
 
     private fun updateSpeed() {
