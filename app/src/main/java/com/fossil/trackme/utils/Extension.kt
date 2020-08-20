@@ -19,6 +19,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.*
 import com.fossil.trackme.R
+import com.google.android.gms.maps.model.LatLng
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
@@ -186,14 +187,17 @@ fun distance(
     return (distance * meterConversion.toFloat()).toFloat()
 }
 
-fun View.loadBitmapFromView(): Bitmap? {
-    val b = Bitmap.createBitmap(
-        layoutParams.width,
-        layoutParams.height,
-        Bitmap.Config.ARGB_8888
-    )
-    val c = Canvas(b)
-    layout(left, top, right, bottom)
-    draw(c)
-    return b
+
+
+fun midPoint(
+    lat1: Double,
+    lon1: Double,
+    lat2: Double,
+    lon2: Double
+) : LatLng{
+
+    val lat3 = (lat1 + lat2)/2
+    val lon3 = (lon1 + lon2)/2
+
+    return LatLng(lat3,lon3)
 }

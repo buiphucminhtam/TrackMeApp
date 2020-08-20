@@ -6,6 +6,8 @@ import androidx.lifecycle.MutableLiveData
 import com.fossil.trackme.base.BaseViewModel
 import com.fossil.trackme.data.models.*
 import com.fossil.trackme.data.repositories.MapsRepository
+import com.fossil.trackme.utils.distance
+import com.fossil.trackme.utils.midPoint
 
 class MapsViewModel : BaseViewModel() {
     private val repo by lazy { MapsRepository.INSTANCE }
@@ -13,6 +15,8 @@ class MapsViewModel : BaseViewModel() {
     private val _listLatLong = MutableLiveData<List<LatLongEntity>>()
     private val _trackSession = MutableLiveData<TrackingSessionEntity>()
     private val _onInsertedTrackSession = MutableLiveData<Boolean>()
+    private val _captureEntity = MutableLiveData<CaptureEntity>()
+
 
     val listLatLong: LiveData<List<LatLongEntity>>
         get() = _listLatLong
@@ -22,6 +26,9 @@ class MapsViewModel : BaseViewModel() {
 
     val onInsertTrackSession : LiveData<Boolean>
         get() = _onInsertedTrackSession
+
+    val captureEntity : LiveData<CaptureEntity>
+        get() = _captureEntity
 
     fun getCurrentTrackSessionAndListLatLong(sessionId: Long) {
         async {
@@ -35,6 +42,54 @@ class MapsViewModel : BaseViewModel() {
                 }
                 _trackSession.postValue(it.toTrackSessionEntity())
 
+            }
+        }
+    }
+
+    fun handleViewCapture(trackSessionId : Long){
+        async {
+            Log.e("MapsViewModel","handleViewCapture")
+            val listLatLongResponse = repo.getListLatLong(trackSessionId)
+
+            Log.e("MapsViewModel","list LatLong: ${listLatLongResponse.toString()}")
+
+            if (listLatLongResponse!=null && listLatLongResponse.isNotEmpty()) {
+                var minLat = listLatLongResponse[0].lattitude?:0.0
+                var maxLat = listLatLongResponse[0].lattitude?:0.0
+                var minLong = listLatLongResponse[0].lngtitude?:0.0
+                var maxLong = listLatLongResponse[0].lngtitude?:0.0
+
+                //Find 4 point min max
+                listLatLongResponse?.let {
+                    for (item in it) {
+                        minLat = kotlin.math.min(minLat, item.lattitude ?: 0.0)
+                        maxLat = kotlin.math.max(maxLat, item.lattitude ?: 0.0)
+                        minLong = kotlin.math.min(minLong, item.lngtitude ?: 0.0)
+                        maxLong = kotlin.math.max(maxLong, item.lngtitude ?: 0.0)
+                    }
+                }
+
+                //Find 2 middle of 2 middle point
+                val middleLong = midPoint(minLat,maxLong,minLat,minLong)
+                val middleLat = midPoint(maxLat, minLong, maxLat, maxLong)
+                val centerPoint = midPoint(middleLat.latitude,middleLat.longitude,middleLong.latitude,middleLong.longitude)
+
+
+
+                //Find zoom value from distance from center point to other point ( in 4 point, now i get minLat and max Long)
+                //Find R first
+                val r = distance(centerPoint.latitude,centerPoint.longitude,minLat,maxLong)
+                //So D = rx2 then we have zoom value from distance
+                val zoomValue = when {
+                    r> 0 && r<= 1000 -> 15.0
+                    r>1000 && r<=3000 -> 12.7
+                    r>3000 && r <= 10000 -> 10.5
+                    r>10000 && r < 50000 -> 5.0
+                    else -> 3.0
+                }
+
+                Log.e("MapsViewModel","middleLong: $middleLong middleLat: $middleLat centerPoint: $centerPoint R: $r Zoom Value: $zoomValue")
+                _captureEntity.postValue(CaptureEntity(centerPoint,zoomValue))
             }
         }
     }

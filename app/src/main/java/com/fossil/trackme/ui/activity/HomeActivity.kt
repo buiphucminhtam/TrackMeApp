@@ -16,6 +16,7 @@ import com.fossil.trackme.base.RVClickListener
 import com.fossil.trackme.data.models.TrackingSessionEntity
 import com.fossil.trackme.data.viewmodel.HomeViewModel
 import com.fossil.trackme.ui.viewholders.TrackingSessionViewHolder
+import com.fossil.trackme.utils.UISchedule
 import com.fossil.trackme.utils.getViewModel
 import com.fossil.trackme.utils.observeOnce
 import kotlinx.android.synthetic.main.activity_home.*
@@ -51,7 +52,7 @@ class HomeActivity : BaseActivity() {
     override fun observeData() {
         viewModel.listTrackingSession.observe(this, Observer {
             it?.run {
-                (rvTrackingSession.adapter as BindableAdapter<TrackingSessionEntity>).setData(this)
+                UISchedule.submitJob { rvTrackingSession.post { (rvTrackingSession.adapter as BindableAdapter<TrackingSessionEntity>).setData(this) } }
             }
         })
     }

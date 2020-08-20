@@ -194,7 +194,7 @@ class LocationService : BaseService(), LocationListener {
     }
 
     override fun onLocationChanged(location: Location?) {
-        Log.e(TAG, "OnLocationChange")
+        Log.e(TAG, "OnLocationChange: $location")
         //On Update location
         location?.let {updateDistance(it.toLatLongEntity())}
         saveAndSendBroadCastLocation()
@@ -204,7 +204,7 @@ class LocationService : BaseService(), LocationListener {
         lastLocation?.let {
             val distance = distance(it.lat,it.long,newLocation.lat,newLocation.long)
             totalDistance += distance
-            newLocation.speed = (totalDistance / totalTime) * (18 / 5)
+            newLocation.speed = (totalDistance / totalTime) * (18 / 5) // 18/5 is value to convert m/s to km/h
             lastLocation = newLocation
         }?:kotlin.run {
             lastLocation = newLocation
@@ -241,8 +241,9 @@ class LocationService : BaseService(), LocationListener {
 
     private fun insertListLatLong() {
         async {
-            val result = repo.insertArrLatLong(listLocation.toListLatLongFromLatLongEntity(sessionId).toTypedArray())
-            Log.e(TAG,"result insert List LatLong: $result")
+            val convertArray = listLocation.toListLatLongFromLatLongEntity(sessionId).toTypedArray()
+            Log.e(TAG,"insert arr: $convertArray")
+            val result = repo.insertArrLatLong(convertArray)
             listLocation.clear()
         }
     }

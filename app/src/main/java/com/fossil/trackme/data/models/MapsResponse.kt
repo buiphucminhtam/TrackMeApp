@@ -9,10 +9,10 @@ data class LatLong(
     var id: Long = System.currentTimeMillis(),
     @ColumnInfo(name = "trackSessionId")
     var trackSessionId:Long? = 0,
-    @ColumnInfo(name = "lat")
-    var lat: Double? = 0.0,
-    @ColumnInfo(name = "long")
-    var long: Double? = 0.0,
+    @ColumnInfo(name = "lattitude")
+    var lattitude: Double? = 0.0,
+    @ColumnInfo(name = "longtitude")
+    var lngtitude: Double? = 0.0,
     @ColumnInfo(name = "speed")
     var currentSpeed: Float?=0F
 )

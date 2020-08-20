@@ -38,7 +38,7 @@ fun List<LatLongEntity>.toListLatLongFromLatLongEntity(trackSessionId:Long):List
 }
 
 fun LatLong.toLatLongEntity(): LatLongEntity {
-    return LatLongEntity(id?:0,lat?:0.0,long?:0.0,currentSpeed?:0F)
+    return LatLongEntity(id?:0,lattitude?:0.0,lngtitude?:0.0,currentSpeed?:0F)
 }
 
 fun List<LatLong>.toListLatLongEntity() : List<LatLongEntity> {
@@ -50,7 +50,7 @@ fun List<LatLong>.toListLatLongEntity() : List<LatLongEntity> {
 }
 
 fun Location.toLatLongEntity():LatLongEntity{
-    return LatLongEntity(System.currentTimeMillis(),latitude,longitude)
+    return LatLongEntity(System.currentTimeMillis(),latitude,longitude,speed)
 }
 
 fun Location.toLatLong(trackSessionId: Long):LatLong{

@@ -10,6 +10,7 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.view.View
 import androidx.core.content.ContextCompat
@@ -17,6 +18,7 @@ import androidx.lifecycle.Observer
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.fossil.trackme.R
 import com.fossil.trackme.base.BaseActivity
+import com.fossil.trackme.data.models.CaptureEntity
 import com.fossil.trackme.data.models.LatLongEntity
 import com.fossil.trackme.data.models.TrackingSessionEntity
 import com.fossil.trackme.data.services.LocationService
@@ -27,6 +29,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
 import kotlinx.android.synthetic.main.activity_maps.*
 
@@ -143,6 +146,12 @@ class MapsActivity : BaseActivity(), OnMapReadyCallback {
                 finish()
             }
         })
+
+        viewModel.captureEntity.observe(this, Observer {
+            it?.run {
+                saveTrackingSession(this)
+            }
+        })
     }
 
     private fun startService() {
@@ -223,6 +232,12 @@ class MapsActivity : BaseActivity(), OnMapReadyCallback {
                 if (listLocationToDrawPath.isNotEmpty()) {
                     lastLocation = listLocationToDrawPath[0]
                     listLocationToDrawPath.removeAt(0)
+                    mMap?.let {
+                        lastLocation?.run {
+                            it.addMarker(MarkerOptions().position(LatLng(lat,long)))
+                        }
+
+                    }
                 }
             }
         }
@@ -234,7 +249,7 @@ class MapsActivity : BaseActivity(), OnMapReadyCallback {
     }
 
     private fun updateSpeed() {
-        tvAvgSpeed.text = "${String.format("%.2f", (totalDistance / totalTime) * (18 / 5))} Km/h"
+        tvAvgSpeed.text = "${lastLocation?.speed} Km/h"
     }
 
     private fun updateTime() {
@@ -243,17 +258,32 @@ class MapsActivity : BaseActivity(), OnMapReadyCallback {
 
     private fun onStopTrackingSession() {
         Log.e(TAG,"onStopTrackingSession")
+       doHandleCaptureMapView()
+    }
+
+    private fun doHandleCaptureMapView() {
+        viewModel.handleViewCapture(LocationService.sessionId)
+    }
+
+    private fun saveTrackingSession(captureEntity: CaptureEntity) {
         isStartFollow = false
         val sessionId = LocationService.sessionId
         stopService(Intent(this, LocationService::class.java))
-        mMap?.snapshot {
-            Log.e(TAG,"On Snapshot ready: $it")
-            it?.run {
-                val base64StringConverted = BitMapToString(it)
-                Log.e(TAG,"converted $base64StringConverted")
-                if(base64StringConverted != null) {
-                    currentTrackingSession = TrackingSessionEntity(sessionId, arrayListOf(),base64StringConverted,totalTime,(totalDistance / totalTime) * (18 / 5), totalDistance)
-                    viewModel.updateTrackSession(currentTrackingSession!!)
+        mMap?.run {
+            moveCamera(CameraUpdateFactory.newLatLngZoom(captureEntity.latLng, captureEntity.zoomValue.toFloat()))
+            setOnCameraIdleListener {
+                setOnMapLoadedCallback {
+                    snapshot {
+                        Log.e(TAG,"On Snapshot ready: $it")
+                        it?.run {
+                            val base64StringConverted = BitMapToString(it)
+                            Log.e(TAG,"converted $base64StringConverted")
+                            if(base64StringConverted != null) {
+                                currentTrackingSession = TrackingSessionEntity(sessionId, arrayListOf(),base64StringConverted,totalTime,(totalDistance / totalTime) * (18 / 5), totalDistance)
+                                viewModel.updateTrackSession(currentTrackingSession!!)
+                            }
+                        }
+                    }
                 }
             }
         }

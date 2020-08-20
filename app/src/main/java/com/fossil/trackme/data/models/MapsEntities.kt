@@ -1,10 +1,7 @@
 package com.fossil.trackme.data.models
 
 import android.os.Parcelable
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.Ignore
-import androidx.room.PrimaryKey
+import com.google.android.gms.maps.model.LatLng
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
@@ -12,8 +9,8 @@ data class LatLongEntity(
     var id: Long = System.currentTimeMillis(),
     var lat: Double = 0.0,
     var long: Double = 0.0,
-    var speed:Float = 0F
-): Parcelable
+    var speed: Float = 0F
+) : Parcelable
 
 @Parcelize
 data class TrackingSessionEntity(
@@ -23,4 +20,10 @@ data class TrackingSessionEntity(
     var totalTime: Long,
     var avgSpeed: Float,
     var totalDistance: Float
-): Parcelable
+) : Parcelable
+
+@Parcelize
+data class CaptureEntity(
+    var latLng: LatLng,
+    var zoomValue: Double
+) : Parcelable
