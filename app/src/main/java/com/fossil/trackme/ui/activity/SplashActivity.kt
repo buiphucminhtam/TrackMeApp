@@ -1,6 +1,5 @@
 package com.fossil.trackme.ui.activity
 
-import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import com.fossil.trackme.base.BaseActivity
@@ -14,6 +13,7 @@ class SplashActivity : BaseActivity() {
         } else {
             startActivity(Intent(this, HomeActivity::class.java))
         }
+        finish()
     }
 
     override fun initViews() {
