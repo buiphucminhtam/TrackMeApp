@@ -41,9 +41,9 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".ui.activity.HomeActivity"/>
+        <activity android:name=".ui.activity.HomeActivity" android:launchMode="singleTask"/>
 
-        <activity android:name=".ui.activity.MapsActivity"/>
+        <activity android:name=".ui.activity.MapsActivity" android:launchMode="singleTask"/>
 
         <service android:name=".data.services.LocationService" android:enabled="true"/>
     </application>
