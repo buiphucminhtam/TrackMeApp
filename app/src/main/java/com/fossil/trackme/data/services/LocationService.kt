@@ -26,11 +26,7 @@ class LocationService : BaseService(), LocationListener {
     private lateinit var locationManager: LocationManager
     private val listLocation = arrayListOf<LatLongEntity>()
     private var lastLocation: LatLongEntity? = null
-    private var timeString = ""
-    private var isStart = false
     private var isInit = false
-    private var totalDistance = 0f //Meter
-    private var totalTime = 0L //second
     private val handler = Handler()
     private var runnableUpdateTime: Runnable?=null
     private var notificationLayout:RemoteViews?=null
@@ -48,6 +44,9 @@ class LocationService : BaseService(), LocationListener {
         const val MAX_TRACKING_LATLONG = 2
         var sessionId = 0L
         var isServiceRunning = false
+        var isStart = false
+        var totalDistance = 0f //Meter
+        var totalTime = 0L //second
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -88,9 +87,15 @@ class LocationService : BaseService(), LocationListener {
                 action = ACTION_UPDATE_TIME
                 putExtra(TIME_DATA,totalTime)
             })
-            handler.postDelayed(runnableUpdateTime,1000)
+           startDelayTask()
         }
-        handler.postDelayed(runnableUpdateTime,1000)
+        startDelayTask()
+    }
+
+    private fun startDelayTask(){
+        runnableUpdateTime?.let {
+            handler.postDelayed(it,1000)
+        }
     }
 
     private fun stopTimer() {
@@ -104,24 +109,22 @@ class LocationService : BaseService(), LocationListener {
             Log.e(TAG, "request update location")
             locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
-                1000,
+                2000,
                 10f,
                 this
             )
             lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.toLatLongEntity()
             saveAndSendBroadCastLocation()
+            //Insert first last long
+            insertListLatLong()
         }
     }
 
 
-
-
     private fun createNotification() {
-// Create intent that will bring our app to the front, as if it was tapped in the app
-        // launcher
-
         // Create intent that will bring our app to the front, as if it was tapped in the app
         // launcher
+
         val channel: String =
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) createChannel() else ""
 
@@ -148,7 +151,7 @@ class LocationService : BaseService(), LocationListener {
             notificationLayout?.setOnClickPendingIntent(R.id.tvPause, contentIntent)
             Notification.Builder(applicationContext, channel)
                 .setContentTitle(getString(R.string.app_name))
-                .setContentText("Time: ")
+                .setContentText("Track me is running ")
                 .setStyle(Notification.DecoratedCustomViewStyle())
                 .setCustomContentView(notificationLayout)
                 .setColor(resources.getColor(R.color.colorPrimaryDark))
@@ -158,7 +161,7 @@ class LocationService : BaseService(), LocationListener {
         } else {
             Notification.Builder(applicationContext)
                 .setContentTitle(getString(R.string.app_name))
-                .setContentText("Time: $timeString")
+                .setContentText("Track me is running ")
                 .setSmallIcon(R.drawable.ic_pause)
                 .setWhen(System.currentTimeMillis())
                 .setColor(resources.getColor(R.color.colorPrimaryDark))
@@ -179,10 +182,10 @@ class LocationService : BaseService(), LocationListener {
     private fun createChannel(): String {
         val mNotificationManager =
             this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?
-        val name = "snap map fake location "
+        val name = "tracking location "
         val importance = NotificationManager.IMPORTANCE_LOW
         val mChannel =
-            NotificationChannel("snap map channel", name, importance)
+            NotificationChannel("tracking channel", name, importance)
         mChannel.enableLights(true)
         mChannel.lightColor = Color.BLUE
         if (mNotificationManager != null) {
@@ -190,7 +193,7 @@ class LocationService : BaseService(), LocationListener {
         } else {
             stopSelf()
         }
-        return "snap map channel"
+        return "tracking channel"
     }
 
     override fun onLocationChanged(location: Location?) {
@@ -232,10 +235,8 @@ class LocationService : BaseService(), LocationListener {
     private fun insertTrackSession() {
         sessionId = System.currentTimeMillis()
         async {
-            val result = repo.insertTrackSession(TrackSession(sessionId,"",totalTime,0f,totalDistance))
-            Log.e(TAG,"result insert track session: $result")
-            val getListTrackSession = repo.getListTrackSession()
-            Log.e(TAG,"get list tracksession: $getListTrackSession")
+            repo.insertTrackSession(TrackSession(sessionId,"",totalTime,0f,totalDistance))
+            Log.e(TAG,"insertTrackSession")
         }
     }
 
