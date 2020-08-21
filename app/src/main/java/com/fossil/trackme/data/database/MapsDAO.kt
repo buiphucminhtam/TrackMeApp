@@ -6,7 +6,7 @@ import com.fossil.trackme.data.models.TrackSession
 
 @Dao
 interface TrackSessionDao {
-    @Query("Select * from TrackSession")
+    @Query("Select * from TrackSession order by id DESC")
     suspend fun getListTrackSession(): List<TrackSession>
 
     @Query("Select * from tracksession WHERE id = :id")
