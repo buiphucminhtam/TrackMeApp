@@ -19,7 +19,6 @@ class HomeViewModel : BaseViewModel() {
         async {
             //Currently just get list session to view (now lis latlong in tracksession is empty) so if need to go to detail -> need to create one function to get list latlong from id of session
             val listTrackSession = repo.getListTrackSession()
-            Log.e("HomeViewModel","result: $listTrackSession")
             listTrackSession?.let {
                 _listTrackSession.postValue(it.toListTrackSessionEntity())
             }

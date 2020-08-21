@@ -30,6 +30,7 @@ class MapsViewModel : BaseViewModel() {
     val captureEntity : LiveData<CaptureEntity>
         get() = _captureEntity
 
+
     fun getCurrentTrackSessionAndListLatLong(sessionId: Long) {
         async {
             val response = repo.getTrackSessionDB(sessionId)
@@ -53,11 +54,11 @@ class MapsViewModel : BaseViewModel() {
 
             Log.e("MapsViewModel","list LatLong: ${listLatLongResponse.toString()}")
 
-            if (listLatLongResponse!=null && listLatLongResponse.isNotEmpty()) {
-                var minLat = listLatLongResponse[0].lattitude?:0.0
-                var maxLat = listLatLongResponse[0].lattitude?:0.0
-                var minLong = listLatLongResponse[0].lngtitude?:0.0
-                var maxLong = listLatLongResponse[0].lngtitude?:0.0
+            if (listLatLongResponse != null && listLatLongResponse.isNotEmpty()) {
+                var minLat = listLatLongResponse[0].lattitude ?: 0.0
+                var maxLat = listLatLongResponse[0].lattitude ?: 0.0
+                var minLong = listLatLongResponse[0].lngtitude ?: 0.0
+                var maxLong = listLatLongResponse[0].lngtitude ?: 0.0
 
                 //Find 4 point min max
                 listLatLongResponse?.let {
@@ -70,26 +71,35 @@ class MapsViewModel : BaseViewModel() {
                 }
 
                 //Find 2 middle of 2 middle point
-                val middleLong = midPoint(minLat,maxLong,minLat,minLong)
+                val middleLong = midPoint(minLat, maxLong, minLat, minLong)
                 val middleLat = midPoint(maxLat, minLong, maxLat, maxLong)
-                val centerPoint = midPoint(middleLat.latitude,middleLat.longitude,middleLong.latitude,middleLong.longitude)
-
+                val centerPoint = midPoint(
+                    middleLat.latitude,
+                    middleLat.longitude,
+                    middleLong.latitude,
+                    middleLong.longitude
+                )
 
 
                 //Find zoom value from distance from center point to other point ( in 4 point, now i get minLat and max Long)
                 //Find R first
-                val r = distance(centerPoint.latitude,centerPoint.longitude,minLat,maxLong)
-                //So D = rx2 then we have zoom value from distance
+                val r = distance(centerPoint.latitude, centerPoint.longitude, minLat, maxLong)
+                //So we have zoom value from r distance
                 val zoomValue = when {
-                    r> 0 && r<= 1000 -> 15.0
-                    r>1000 && r<=3000 -> 12.7
-                    r>3000 && r <= 10000 -> 10.5
-                    r>10000 && r < 50000 -> 5.0
+                    r > 0 && r <= 1000 -> 15.0
+                    r > 1000 && r <= 5000 -> 12.5
+                    r > 5000 && r <= 10000 -> 11.0
+                    r > 10000 && r <= 50000 -> 8.5
+                    r > 50000 && r <= 100000 -> 6.0
+                    r > 100000 && r <= 500000 -> 5.5
                     else -> 3.0
                 }
 
-                Log.e("MapsViewModel","middleLong: $middleLong middleLat: $middleLat centerPoint: $centerPoint R: $r Zoom Value: $zoomValue")
-                _captureEntity.postValue(CaptureEntity(centerPoint,zoomValue))
+                Log.e(
+                    "MapsViewModel",
+                    "middleLong: $middleLong middleLat: $middleLat centerPoint: $centerPoint R: $r Zoom Value: $zoomValue"
+                )
+                _captureEntity.postValue(CaptureEntity(centerPoint, zoomValue))
             }
         }
     }

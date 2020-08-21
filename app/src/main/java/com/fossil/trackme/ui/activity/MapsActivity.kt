@@ -2,7 +2,6 @@ package com.fossil.trackme.ui.activity
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -10,7 +9,6 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import android.view.View
 import androidx.core.content.ContextCompat
@@ -77,17 +75,15 @@ class MapsActivity : BaseActivity(), OnMapReadyCallback {
     companion object {
         private const val TAG = "MapsActivity"
         const val MY_PERMISSIONS_REQUEST_LOCATION = 99
-        const val ZOOM_DEFAULT_VALUE = 17.5f
+        const val ZOOM_DEFAULT_VALUE = 17f
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = getViewModel(MapsViewModel::class.java)
         setContentView(R.layout.activity_maps)
-        if (checkLocationPermissionWithRequest()) {
-            initMaps()
-            startService()
-        }
+        initMaps()
+
     }
 
 
@@ -101,18 +97,14 @@ class MapsActivity : BaseActivity(), OnMapReadyCallback {
 
     override fun initViews() {
         btnPause.setOnClickListener {
-            isStartFollow = false
-            btnPause.post { btnPause.visibility = View.GONE }
-            groupPaused.post { groupPaused.visibility = View.VISIBLE }
+           changeStatePause()
             startService(Intent(this, LocationService::class.java).apply {
                 action = LocationService.ACTION_PAUSE
             })
         }
 
         btnResume.setOnClickListener {
-            isStartFollow = true
-            btnPause.post { btnPause.visibility = View.VISIBLE }
-            groupPaused.post { groupPaused.visibility = View.GONE }
+            changeStateStart()
             startService(Intent(this, LocationService::class.java).apply {
                 action = LocationService.ACTION_START
             })
@@ -120,16 +112,33 @@ class MapsActivity : BaseActivity(), OnMapReadyCallback {
 
         btnStop.setOnClickListener {
             //Create image and save to database
+            if(listLocationToDrawPath.size == 0 ){
+                startActivity(Intent(this,HomeActivity::class.java))
+                finish()
+                return@setOnClickListener
+            }
             onStopTrackingSession()
         }
+    }
+
+    private fun changeStatePause() {
+        isStartFollow = false
+        btnPause.post { btnPause.visibility = View.GONE }
+        groupPaused.post { groupPaused.visibility = View.VISIBLE }
+    }
+
+    private fun changeStateStart() {
+        isStartFollow = true
+        btnPause.post { btnPause.visibility = View.VISIBLE }
+        groupPaused.post { groupPaused.visibility = View.GONE }
     }
 
     override fun observeData() {
         viewModel.listLatLong.observe(this, Observer {
             it?.run {
+                listLocationToDrawPath.clear()
                 listLocationToDrawPath.addAll(0, this)
-                if (listLocationToDrawPath.isNotEmpty())
-                    lastLocation = listLocationToDrawPath[0]
+                initFirstDraw()
                 onLocationChanged()
             }
         })
@@ -142,7 +151,7 @@ class MapsActivity : BaseActivity(), OnMapReadyCallback {
 
         viewModel.onInsertTrackSession.observe(this, Observer {
             if (it) {
-                setResult(Activity.RESULT_OK)
+                startActivity(Intent(this,HomeActivity::class.java))
                 finish()
             }
         })
@@ -162,6 +171,12 @@ class MapsActivity : BaseActivity(), OnMapReadyCallback {
         } else {
             //call get list latlong from database for updating view
             viewModel.getCurrentTrackSessionAndListLatLong(LocationService.sessionId)
+            //Check state for loading state
+            if(!LocationService.isStart) changeStatePause()
+            totalDistance = LocationService.totalDistance
+            totalTime = LocationService.totalTime
+            updateDistance()
+            updateSpeed()
         }
     }
 
@@ -221,7 +236,7 @@ class MapsActivity : BaseActivity(), OnMapReadyCallback {
                     val newLatLong = LatLng(newLocation.lat, newLocation.long)
                     mMap?.run {
                         //Move camera
-                        moveCamera(CameraUpdateFactory.newLatLngZoom(currentLatLong, ZOOM_DEFAULT_VALUE))
+                        moveCamera(CameraUpdateFactory.newLatLngZoom(newLatLong, ZOOM_DEFAULT_VALUE))
                         //Draw line on map
                         addPolyline(PolylineOptions().add(currentLatLong, newLatLong).width(5f).color(Color.RED))
                     }
@@ -229,16 +244,20 @@ class MapsActivity : BaseActivity(), OnMapReadyCallback {
                     listLocationToDrawPath.removeAt(0)
                 }
             } ?: kotlin.run {
-                if (listLocationToDrawPath.isNotEmpty()) {
-                    lastLocation = listLocationToDrawPath[0]
-                    listLocationToDrawPath.removeAt(0)
-                    mMap?.let {
-                        lastLocation?.run {
-                            it.addMarker(MarkerOptions().position(LatLng(lat,long)))
-                        }
+                initFirstDraw()
+            }
+        }
+    }
 
-                    }
+    private fun initFirstDraw() {
+        if (listLocationToDrawPath.isNotEmpty()) {
+            lastLocation = listLocationToDrawPath[0]
+            listLocationToDrawPath.removeAt(0)
+            mMap?.let {
+                lastLocation?.run {
+                    it.addMarker(MarkerOptions().position(LatLng(lat,long)).anchor(0.5f,1f))
                 }
+
             }
         }
     }
@@ -279,7 +298,7 @@ class MapsActivity : BaseActivity(), OnMapReadyCallback {
                             val base64StringConverted = BitMapToString(it)
                             Log.e(TAG,"converted $base64StringConverted")
                             if(base64StringConverted != null) {
-                                currentTrackingSession = TrackingSessionEntity(sessionId, arrayListOf(),base64StringConverted,totalTime,(totalDistance / totalTime) * (18 / 5), totalDistance)
+                                currentTrackingSession = TrackingSessionEntity(sessionId, arrayListOf(),base64StringConverted,null,totalTime,(totalDistance / totalTime) * (18 / 5), totalDistance)
                                 viewModel.updateTrackSession(currentTrackingSession!!)
                             }
                         }
@@ -297,6 +316,10 @@ class MapsActivity : BaseActivity(), OnMapReadyCallback {
         )
         LocalBroadcastManager.getInstance(this)
             .registerReceiver(broadcastUpdateTime, IntentFilter(LocationService.ACTION_UPDATE_TIME))
+
+        if (checkLocationPermissionWithRequest()) {
+            startService()
+        }
     }
 
     override fun onStop() {
