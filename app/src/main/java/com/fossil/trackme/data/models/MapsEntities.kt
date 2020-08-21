@@ -1,5 +1,6 @@
 package com.fossil.trackme.data.models
 
+import android.graphics.Bitmap
 import android.os.Parcelable
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.android.parcel.Parcelize
@@ -17,6 +18,7 @@ data class TrackingSessionEntity(
     var id: Long,
     var latLongArr: List<LatLongEntity>,
     var imageBase64: String,
+    var bitMap:Bitmap?,
     var totalTime: Long,
     var avgSpeed: Float,
     var totalDistance: Float

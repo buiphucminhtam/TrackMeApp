@@ -1,13 +1,14 @@
 package com.fossil.trackme.data.models
 
 import android.location.Location
+import com.fossil.trackme.utils.StringToBitMap
 
 fun TrackingSessionEntity.toTrackSession():TrackSession {
     return TrackSession(id,imageBase64,totalTime,avgSpeed,totalDistance)
 }
 
 fun TrackSession.toTrackSessionEntity(): TrackingSessionEntity {
-    return TrackingSessionEntity(id?:0, arrayListOf(),imageBase64?:"",totalTime?:0,avgSpeed?:0f,totalDistance?:0f)
+    return TrackingSessionEntity(id?:0, arrayListOf(),imageBase64?:"", StringToBitMap(imageBase64),totalTime?:0,avgSpeed?:0f,totalDistance?:0f)
 }
 fun List<TrackSession>.toListTrackSessionEntity(): List<TrackingSessionEntity> {
     val list = arrayListOf<TrackingSessionEntity>()
