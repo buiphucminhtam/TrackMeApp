@@ -86,7 +86,7 @@ class MapsViewModel : BaseViewModel() {
                 val r = distance(centerPoint.latitude, centerPoint.longitude, minLat, maxLong)
                 //So we have zoom value from r distance
                 val zoomValue = when {
-                    r > 0 && r <= 1000 -> 15.0
+                    r <= 1000 -> 15.0
                     r > 1000 && r <= 5000 -> 12.5
                     r > 5000 && r <= 10000 -> 11.0
                     r > 10000 && r <= 50000 -> 8.5
