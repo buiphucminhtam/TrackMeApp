@@ -2,6 +2,7 @@ package com.fossil.trackme.base
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.reflect.KClass
 import kotlin.reflect.full.primaryConstructor
@@ -18,8 +19,18 @@ open class BasicSingleViewAdapter<TYPE>(
      * Auto make ViewHolder that extend [BaseViewHolder]
      * @return object of ViewHolder
      */
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<TYPE> {
         val constructor = vhClass.primaryConstructor
         return constructor!!.call(LayoutInflater.from(parent.context).inflate(layoutId, parent, false),clickListener)
+    }
+
+    override var diffCallback: DiffUtil.ItemCallback<TYPE> = object : DiffUtil.ItemCallback<TYPE>(){
+        override fun areItemsTheSame(oldItem: TYPE, newItem: TYPE): Boolean {
+            return false
+        }
+
+        override fun areContentsTheSame(oldItem: TYPE, newItem: TYPE): Boolean {
+            return false
+        }
     }
 }

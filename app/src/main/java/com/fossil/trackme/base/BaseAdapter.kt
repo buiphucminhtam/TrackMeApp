@@ -1,6 +1,9 @@
 package com.fossil.trackme.base
 
 import android.os.Bundle
+import android.util.Log
+import androidx.recyclerview.widget.AsyncListDiffer
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.reflect.KClass
 
@@ -21,16 +24,18 @@ import kotlin.reflect.KClass
 abstract class BaseAdapter<TYPE>(
     private var layoutId: Int,
     private var vhClass: KClass<out BaseViewHolder<TYPE>>,
-    private var clickListener: RVClickListener<TYPE>? = null) : RecyclerView.Adapter<RecyclerView.ViewHolder>(),
+    private var clickListener: RVClickListener<TYPE>? = null) : RecyclerView.Adapter<BaseViewHolder<TYPE>>(),
     BindableAdapter<TYPE> {
+    private val mDiffer by lazy { AsyncListDiffer<TYPE>(this, diffCallback) }
 
     override var listData: ArrayList<TYPE> = ArrayList()
     /**
      * Override this if want to make infinite list
      * @return the number of itemConfigBox in RecyclerView
      */
+    @Synchronized
     override fun getItemCount(): Int {
-        return listData.size
+        return mDiffer.currentList.size
     }
 
     /**
@@ -38,26 +43,55 @@ abstract class BaseAdapter<TYPE>(
      * @param position the position of itemConfigBox in RecyclerView
      * @return the object of itemConfigBox
      */
+    @Synchronized
     protected fun getItem(position: Int): TYPE {
-        return listData[position]
+        return mDiffer.currentList[position]
     }
 
     /**
      * Auto transfer data to [BaseViewHolder.bind]
      */
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        if (holder is IViewHolder<*>) {
-            (holder as IViewHolder<TYPE>).apply {
-                set(listData[position])
-                bind()
-            }
+
+
+    override fun onBindViewHolder(holder: BaseViewHolder<TYPE>, position: Int) {
+        val item = getItem(position)
+        holder.set(item)
+        holder.bind()
+    }
+
+    @Synchronized
+    override fun setData(data: List<TYPE>) {
+        mDiffer.submitList(data)
+        Log.e("BaseAdapter","setData")
+    }
+
+
+    @Synchronized
+    override fun addItem(item: TYPE, pos: Int?) {
+        if (pos != null && pos in listData.indices) {
+            mDiffer.currentList.add(pos, item)
+            notifyItemInserted(pos)
+        } else {
+            mDiffer.currentList.add(item)
+            notifyItemInserted(listData.size - 1)
         }
     }
 
-    override fun setData(data: List<TYPE>) {
-        listData.clear()
-        listData.addAll(data)
-        notifyDataSetChanged()
+    @Synchronized
+    override fun removeItem(pos: Int) {
+        if (pos in mDiffer.currentList.indices) {
+            mDiffer.currentList.removeAt(pos)
+            notifyItemRemoved(pos)
+        }
+    }
+
+    @Synchronized
+    override fun addMoreData(data: List<TYPE>) {
+        val oldSize = mDiffer.currentList.size
+        if (data.isNotEmpty()) {
+            mDiffer.currentList.addAll(data)
+            notifyItemRangeInserted(oldSize, mDiffer.currentList.size - 1)
+        }
     }
 }
 
@@ -69,6 +103,8 @@ interface BindableAdapter<TYPE> {
      * Data of Adapter, always a list
      */
     var listData: ArrayList<TYPE>
+
+    var diffCallback: DiffUtil.ItemCallback<TYPE>
 
     /**
      * Set data for [BindableAdapter]
@@ -86,6 +122,21 @@ interface BindableAdapter<TYPE> {
     fun getData(pos: Int): TYPE {
         return listData[pos]
     }
+
+    /**
+     * Remove item base on position (for a list)
+     */
+    fun removeItem(pos: Int) {}
+
+    /**
+     * Add an item into list with custom position if want to
+     */
+    fun addItem(item: TYPE, pos: Int?) {}
+
+    /**
+     * Add a list of data into adapter
+     */
+    fun addMoreData(data: List<TYPE>) {}
 }
 
 /**

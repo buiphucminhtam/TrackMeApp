@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -15,6 +16,7 @@ import com.fossil.trackme.base.BindableAdapter
 import com.fossil.trackme.base.RVClickListener
 import com.fossil.trackme.data.models.TrackingSessionEntity
 import com.fossil.trackme.data.viewmodel.HomeViewModel
+import com.fossil.trackme.ui.adapters.TrackingSessionAdapter
 import com.fossil.trackme.ui.viewholders.TrackingSessionViewHolder
 import com.fossil.trackme.utils.UISchedule
 import com.fossil.trackme.utils.getViewModel
@@ -33,9 +35,8 @@ class HomeActivity : BaseActivity() {
     override fun initViews() {
         rvTrackingSession?.run {
             layoutManager = LinearLayoutManager(this@HomeActivity, RecyclerView.VERTICAL, false)
-            adapter = BasicSingleViewAdapter<TrackingSessionEntity>(
+            adapter = TrackingSessionAdapter(
                 R.layout.rv_item_session_layout,
-                TrackingSessionViewHolder::class,
                 object : RVClickListener<TrackingSessionEntity> {
                     override fun onItemClick(pos: Int, data: TrackingSessionEntity?) {
                         super.onItemClick(pos, data)
@@ -45,23 +46,20 @@ class HomeActivity : BaseActivity() {
         }
 
         btnRecord.setOnClickListener {
-            startActivityForResult(Intent(this,MapsActivity::class.java),1)
+            startActivity(Intent(this,MapsActivity::class.java))
+            finish()
         }
     }
 
     override fun observeData() {
         viewModel.listTrackingSession.observe(this, Observer {
+            UISchedule.submitJob { pgListSession.visibility = View.GONE }
             it?.run {
-                UISchedule.submitJob { rvTrackingSession.post { (rvTrackingSession.adapter as BindableAdapter<TrackingSessionEntity>).setData(this) } }
+                rvTrackingSession.post { (rvTrackingSession.adapter as TrackingSessionAdapter).let { rv ->
+                    rv.setData(this)
+                    rv.notifyDataSetChanged()
+                }}
             }
         })
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == Activity.RESULT_OK) {
-            Log.e("HomeActivity","update list")
-            viewModel.getListTrackSessionEntity()
-        }
     }
 }
