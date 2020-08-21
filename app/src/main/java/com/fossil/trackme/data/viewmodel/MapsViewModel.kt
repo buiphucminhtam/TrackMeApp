@@ -15,7 +15,7 @@ class MapsViewModel : BaseViewModel() {
     private val _listLatLong = MutableLiveData<List<LatLongEntity>>()
     private val _trackSession = MutableLiveData<TrackingSessionEntity>()
     private val _onInsertedTrackSession = MutableLiveData<Boolean>()
-    private val _captureEntity = MutableLiveData<CaptureEntity>()
+    private val _captureEntity = MutableLiveData<CaptureEntity?>()
 
 
     val listLatLong: LiveData<List<LatLongEntity>>
@@ -27,7 +27,7 @@ class MapsViewModel : BaseViewModel() {
     val onInsertTrackSession : LiveData<Boolean>
         get() = _onInsertedTrackSession
 
-    val captureEntity : LiveData<CaptureEntity>
+    val captureEntity : LiveData<CaptureEntity?>
         get() = _captureEntity
 
 
@@ -53,7 +53,7 @@ class MapsViewModel : BaseViewModel() {
             val listLatLongResponse = repo.getListLatLong(trackSessionId)
 
             Log.e("MapsViewModel","list LatLong: ${listLatLongResponse.toString()}")
-
+            //Check list latlong empty or not
             if (listLatLongResponse != null && listLatLongResponse.isNotEmpty()) {
                 var minLat = listLatLongResponse[0].lattitude ?: 0.0
                 var maxLat = listLatLongResponse[0].lattitude ?: 0.0
@@ -100,7 +100,7 @@ class MapsViewModel : BaseViewModel() {
                     "middleLong: $middleLong middleLat: $middleLat centerPoint: $centerPoint R: $r Zoom Value: $zoomValue"
                 )
                 _captureEntity.postValue(CaptureEntity(centerPoint, zoomValue))
-            }
+            }else _captureEntity.postValue(null)
         }
     }
 

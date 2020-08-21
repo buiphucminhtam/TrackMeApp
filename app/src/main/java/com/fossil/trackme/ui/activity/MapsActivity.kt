@@ -112,11 +112,6 @@ class MapsActivity : BaseActivity(), OnMapReadyCallback {
 
         btnStop.setOnClickListener {
             //Create image and save to database
-            if(listLocationToDrawPath.size == 0 ){
-                startActivity(Intent(this,HomeActivity::class.java))
-                finish()
-                return@setOnClickListener
-            }
             onStopTrackingSession()
         }
     }
@@ -159,6 +154,9 @@ class MapsActivity : BaseActivity(), OnMapReadyCallback {
         viewModel.captureEntity.observe(this, Observer {
             it?.run {
                 saveTrackingSession(this)
+            }?:kotlin.run {
+                startActivity(Intent(this,HomeActivity::class.java))
+                finish()
             }
         })
     }

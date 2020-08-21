@@ -115,8 +115,6 @@ class LocationService : BaseService(), LocationListener {
             )
             lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.toLatLongEntity()
             saveAndSendBroadCastLocation()
-            //Insert first last long
-            insertListLatLong()
         }
     }
 
