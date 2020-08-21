@@ -58,6 +58,9 @@ class LocationService : BaseService(), LocationListener {
                     isStart = true
                     if (!isInit) {
                         isInit = true
+                        isServiceRunning = true
+                        totalDistance = 0f
+                        totalTime = 0L
                         //Init Timer Task
                         locationManager =
                             getSystemService(Context.LOCATION_SERVICE) as LocationManager
